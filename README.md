@@ -3,10 +3,11 @@
 A self-contained local lab that runs the full modern-data-stack chain on your laptop:
 
 ```
-Airflow  ──DockerOperator──>  Spark  ──>  Iceberg tables  ──>  Parquet in MinIO (S3)
-                                            │
-                                    Iceberg REST catalog
-                                   (metadata source of truth)
+        DockerOperator
+Airflow ──────────────▶ Spark ──▶ Iceberg tables ──▶ Parquet in MinIO (S3)
+                                         │
+                               Iceberg REST catalog
+                            (metadata source of truth)
 ```
 
 Airflow schedules the work but does no data processing itself. Its DAG launches a
