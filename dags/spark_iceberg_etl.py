@@ -53,7 +53,11 @@ with DAG(
                 type="bind",
             )
         ],
-        command="spark-submit --master local[*] /opt/scripts/etl.py",
+        # MUST be a single-element list. This image's entrypoint ends with
+        # `eval "$1"`, so it only ever runs the FIRST argument. A plain string
+        # gets shlex-split into separate argv entries, leaving $1 == "spark-submit"
+        # with no script — spark-submit then prints its usage banner and exits 255.
+        command=["spark-submit --master local[*] /opt/scripts/etl.py"],
     )
 
     start >> run_spark_etl

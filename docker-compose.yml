@@ -11,7 +11,7 @@
 #    MinIO console  http://localhost:9001 (login: admin / password)
 #
 #  First run:
-#    1. cp .env.example .env   (and set DOCKER_GID on Linux — see .env.example)
+#    1. cp env.example .env   (and set DOCKER_GID on Linux — see env.example)
 #    2. docker compose up airflow-init
 #    3. docker compose up -d
 #    4. Open Airflow, unpause & trigger the `spark_iceberg_etl` DAG.
@@ -109,7 +109,9 @@ services:
 
   # ---------------------------------------------------------------------------
   # Interactive Spark + Iceberg + Jupyter (optional, but great for poking around
-  # the same tables Airflow writes). Preconfigured with a catalog named `demo`.
+  # the same tables Airflow writes). NOTE: the image's baked-in `demo` catalog
+  # points at http://rest:8181 and warehouse s3://warehouse/wh/, neither of which
+  # matches this stack — pass catalog config explicitly (see README).
   # ---------------------------------------------------------------------------
   spark-iceberg:
     image: tabulario/spark-iceberg:latest
