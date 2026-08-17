@@ -44,7 +44,11 @@ make snapshots   # Iceberg snapshot history
 make warehouse   # list the Parquet + metadata files in MinIO
 make sql Q="SELECT ..."   # arbitrary Spark SQL (catalog config included)
 make clean       # stop the stack and delete all data
+make clean-logs  # delete the local Airflow logs in logs/
 ```
+
+`clean` drops the Docker volumes; `logs/` is a bind mount and survives it, so
+`make clean clean-logs` is the full reset.
 
 The `sql`/`count`/`snapshots` targets pass the catalog `--conf` overrides for you,
 which is why they work where a bare `spark-sql` doesn't — see the caveat below.

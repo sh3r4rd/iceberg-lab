@@ -25,7 +25,7 @@ Q      ?= SELECT * FROM demo.sales.orders ORDER BY order_id
 RUN_ID ?= make_$(shell date +%Y%m%d_%H%M%S)
 
 .DEFAULT_GOAL := help
-.PHONY: help init up down restart clean ps config \
+.PHONY: help init up down restart clean clean-logs ps config \
         logs logs-scheduler logs-webserver \
         dags dag-errors trigger wait task-log runs \
         etl sql count snapshots warehouse verify \
@@ -65,6 +65,11 @@ restart: ## Restart the stack (SERVICE=airflow-scheduler to narrow)
 
 clean: ## Stop the stack and DELETE all data (MinIO, Postgres, notebooks)
 	$(COMPOSE) down -v
+
+clean-logs: ## Delete Airflow's task/scheduler logs from logs/
+	@mkdir -p logs
+	@find logs -mindepth 1 -delete
+	@echo "Cleared logs/"
 
 ps: ## Show container status
 	@$(COMPOSE) ps -a --format 'table {{.Name}}\t{{.Service}}\t{{.Status}}'
