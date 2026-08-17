@@ -1,0 +1,12 @@
+# Local, machine-specific config (copy env.example -> .env)
+.env
+
+# Airflow runtime output
+logs/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# macOS
+.DS_Store
