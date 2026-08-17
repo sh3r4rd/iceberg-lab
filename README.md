@@ -30,6 +30,27 @@ Postgres (Airflow's metadata DB) runs internally only and is not published to th
 These are throwaway local credentials, hardcoded in `docker-compose.yml` and the DAG.
 Don't carry this pattern into anything real.
 
+## Make targets
+
+A `Makefile` wraps the commands you'll repeat. `make` on its own lists them all:
+
+```
+make init        # one-time: create .env, migrate the DB, add the admin user
+make up          # start the stack
+make trigger     # unpause + trigger the ETL DAG, wait for it to finish
+make task-log    # the Spark job's output from the most recent run
+make count       # row count of demo.sales.orders
+make snapshots   # Iceberg snapshot history
+make warehouse   # list the Parquet + metadata files in MinIO
+make sql Q="SELECT ..."   # arbitrary Spark SQL (catalog config included)
+make clean       # stop the stack and delete all data
+```
+
+The `sql`/`count`/`snapshots` targets pass the catalog `--conf` overrides for you,
+which is why they work where a bare `spark-sql` doesn't — see the caveat below.
+
+The rest of this README spells out the underlying commands.
+
 ## Prerequisites
 
 Docker Desktop (or Docker Engine + Compose v2). The Airflow scheduler mounts
