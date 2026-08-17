@@ -33,6 +33,11 @@ scheduler will start.
 The full verification loop after changing the DAG or the Spark job:
 `make trigger && make task-log && make count && make snapshots`.
 
+If the DAG doesn't appear in the UI, check `docker compose logs airflow-scheduler`.
+`make dag-errors` surfaces import failures more directly; empty output there means the
+DAGs parsed, so the cause is elsewhere — usually file placement, or the scheduler not
+having finished starting up.
+
 ## Architecture
 
 The execution chain crosses three hosts, which explains most of the config:
@@ -49,6 +54,10 @@ Consequences worth internalizing:
   container is meaningless to the host daemon.
 - **The network name is pinned** to `iceberg_lab_net` so the spawned container can
   attach to it and resolve `iceberg-rest` and `minio` by service name.
+- **`DOCKER_GID` must match the docker socket's group** for the scheduler to start
+  containers. The default `999` is verified working on Docker Desktop; on Linux set it
+  in `.env` to `stat -c '%g' /var/run/docker.sock` and recreate the containers. A
+  mismatch shows up as a permission error on `/var/run/docker.sock` in the task log.
 - **File placement is load-bearing.** `dags/` is bind-mounted to `/opt/airflow/dags`,
   and the DAG mounts `spark/scripts` into the Spark container as `/opt/scripts`. A
   script anywhere else is simply never loaded.
@@ -78,8 +87,10 @@ These are all fixed in the repo; do not regress them.
 - **`AIRFLOW_UID` must stay `50000` on macOS/Windows.** The `airflow-init` service
   overrides the image entrypoint, which is what would normally register an arbitrary uid
   in `/etc/passwd`; a host uid there makes init die with `getpwuid(): uid not found`.
-  Setting it to `$(id -u)` is a Linux-only fix for bind-mount file ownership, and needs
-  the entrypoint override dropped first.
+  Setting it to `$(id -u)` is a Linux-only fix for bind-mount file ownership. To make a
+  non-default uid work, drop `entrypoint: /bin/bash` from `airflow-init` so the image's
+  own entrypoint runs, and move the steps into the command instead:
+  `command: ["bash", "-c", "airflow db migrate && airflow users create ..."]`.
 - **Never delete the `logs/` directory itself**, only its contents. Docker recreates a
   missing bind-mount source as root-owned, reintroducing the ownership problem above.
 
